@@ -6,26 +6,29 @@
  */
 
 // define LM35 data pin connection
+unsigned long prevByteMillis = 0;
+unsigned long curMillis;
 
 #include <gyro.h>
 #define  LM35_pin  A0
 GYRO hdt(ALL);
 
+boolean stat_data= false;
 float heading;
 // segment pins definitions
-#define SegA   2
-#define SegB   3
-#define SegC   4
-#define SegD    5
-#define SegE    6
-#define SegF    7
-#define SegG    8
-#define SegDP   9
+#define SegA   13
+#define SegB   12
+#define SegC   11
+#define SegD    10
+#define SegE    9
+#define SegF    8
+#define SegG    7
+#define SegDP   6
 // common pins of the three digits definitions
-#define Dig0    10
-#define Dig1    11
-#define Dig2    12
-#define Dig3    13
+#define Dig0    5
+#define Dig1    4
+#define Dig2    3
+#define Dig3    2
 
 // variable declarations
 byte current_digit;
@@ -96,16 +99,23 @@ ISR(TIMER1_OVF_vect)   // Timer1 interrupt service routine (ISR)
 // main loop
 void loop()
 {
- while(Serial.available()>0) {
-      hdt.decode(Serial.read());
-      data= hdt.term(1);
-      d_hdt = data.toFloat();
-      temp = d_hdt * 10;
-      Serial.println(data);
-      delay(100);
-      data ="";
-    
+  curMillis = millis();
+   
+   
+  if(Serial.available()>0) {
+          hdt.decode(Serial.read());
+          data= hdt.term(1);
+          d_hdt = data.toFloat();
+          temp = d_hdt * 10;
+          data ="";
+          prevByteMillis = curMillis; 
+          
+      
   }
+   if (curMillis - prevByteMillis >=20000) {
+   temp=0;
+   }
+      
 }
 
 void disp(byte number)
@@ -220,6 +230,8 @@ void disp(byte number)
       digitalWrite(SegF, HIGH);
       digitalWrite(SegG, HIGH);
       digitalWrite(SegDP, LOW);
+      break;
+    
   }
 }
 
@@ -230,5 +242,7 @@ void disp_off()
    digitalWrite(Dig2, HIGH);
    digitalWrite(Dig3, HIGH);
 }
+
+
 
 // end of code.
